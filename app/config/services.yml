@@ -1,0 +1,10 @@
+parameters:
+
+services:
+  output_proxy:
+    class: ChainCommandBundle\Component\ProxyOutputComponent
+    
+  
+  chain_command:
+    class: ChainCommandBundle\Component\ChainCommandComponent
+    arguments: ['@logger', '@output_proxy']
