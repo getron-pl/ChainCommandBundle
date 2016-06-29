@@ -29,7 +29,7 @@ class EmptyChainedCommand extends \ChainCommandBundle\Command\ChainCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $output->write($this->getName() . ' executed', false);
+        $output->write($this->getName() . ' executed', true);
     }
 
 }

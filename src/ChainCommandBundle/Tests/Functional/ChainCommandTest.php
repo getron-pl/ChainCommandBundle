@@ -1,92 +1,32 @@
 <?php
 
-namespace ChainCommandBundle\Test;
+namespace ChainCommandBundle\Tests\Functional;
 
-use \ChainCommandBundle\ChainCommandBundle;
+use ChainCommandBundle\Tests\Functional\CommandTestCase;
 
-class ChainCommandBundleTest extends \PHPUnit_Framework_TestCase
+class ChainCommandTest extends CommandTestCase
 {
 
-    private $bundle;
-    private $dispatcher;
-    private $logger;
-    private $chain;
-    private $container;
-
-    protected function setUp()
+    public function testIfInstalled()
     {
-        $this->logger = $this->getMockBuilder('\Symfony\Bridge\Monolog\Logger')
-            ->setConstructorArgs(['logger'])
-            ->getMock();
-        $this->bundle = new ChainCommandBundle();
-        $this->dispatcher = new \Symfony\Component\EventDispatcher\EventDispatcher();
-        $this->proxy = new \ChainCommandBundle\Component\ProxyOutputComponent();
-        $this->chain = new \ChainCommandBundle\Component\ChainCommandComponent($this->logger, $this->proxy);
-        $this->container = new \Symfony\Component\DependencyInjection\Container();
-        $this->bundle->setContainer($this->container);
+        $client = self::createClient();
+        $output = $this->runCommand($client, "chained:command");
+        $this->assertContains("chained:command executed", $output);
     }
 
-    public function testConstructor()
+    public function testIfFooHelloIsEnabledAndChained()
     {
-        $this->assertInstanceOf('\ChainCommandBundle\ChainCommandBundle', $this->bundle);
+        $client = self::createClient();
+        $output = $this->runCommand($client, "foo:hello");
+        $this->assertContains('Hello from Foo!', $output);
+        $this->assertContains('Hi from Bar!', $output);
     }
 
-    /**
-     * @expectedException Exception
-     */
-    public function testBootWithoutChainCommandServiceRegistered()
+    public function testIfBarHiIsDisabled()
     {
-        $this->container->set('event_dispatcher', $this->dispatcher);
-
-        $this->bundle->boot();
-    }
-
-    public function testBootWitchChainCommandServiceRegistered()
-    {
-        $this->container->set('event_dispatcher', $this->dispatcher);
-        $this->container->set('chain_command', $this->chain);
-
-        $this->bundle->boot();
-    }
-
-    public function testGetChain()
-    {
-        $this->testBootWitchChainCommandServiceRegistered();
-        $chain = $this->bundle->getChain();
-        $this->assertInstanceOf('\ChainCommandBundle\Component\ChainCommandComponent', $chain);
-    }
-
-    public function testOnCommand()
-    {
-        $this->testBootWitchChainCommandServiceRegistered();
-
-        $command = new \ChainCommandBundle\Command\EmptyChainedCommand();
-        $input = new \Symfony\Component\Console\Input\ArrayInput([]);
-        $output = new \Symfony\Component\Console\Output\BufferedOutput();
-        $event = new \Symfony\Component\Console\Event\ConsoleCommandEvent($command, $input, $output);
-
-        $this->bundle->onCommand($event);
-        $this->assertContains('chained:command executed', $output->fetch());
-    }
-
-    public function testOnTerminate()
-    {
-        $this->testBootWitchChainCommandServiceRegistered();
-
-        $command = new \ChainCommandBundle\Command\EmptyChainedCommand();
-        $input = new \Symfony\Component\Console\Input\ArrayInput([]);
-        $output = new \Symfony\Component\Console\Output\BufferedOutput();
-        $exitCode = 0;
-        $event = new \Symfony\Component\Console\Event\ConsoleTerminateEvent($command, $input, $output, $exitCode);
-        $this->bundle->onTerminate($event);
-
-        $this->assertEmpty($output->fetch());
-    }
-
-    public function testShutdown()
-    {
-        $this->testBootWitchChainCommandServiceRegistered();
-        $this->bundle->shutdown();
+        $client = self::createClient();
+        $output = $this->runCommand($client, "bar:hi");
+        $this->assertContains('cannot be executed on its own', $output);
     }
 
 }

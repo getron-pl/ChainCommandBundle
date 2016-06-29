@@ -7,6 +7,10 @@ a command chain, which are executed when a user runs the main command.
 This bundle disables ability standalone execution of commands that are registered 
 as members of the command chain.
 
+The bundle provides also default empty chain command named chained:command.
+Other commands derived from ChainCommand class can be attached to this
+command.
+
 Configuration
 -------------
 
